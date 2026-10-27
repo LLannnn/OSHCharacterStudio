@@ -35,16 +35,19 @@ no blanket commercial-use grant for the complete external inference stack.
 ## What is distributed
 
 The project distributes its Python/JavaScript/CSS/HTML application, prompt and API
-graph templates, documentation, launchers, regression tests and selected comparison
-examples. It does not bundle model weights, FFmpeg binaries, Python environments,
-preprocessor checkouts or a user project database. No third-party fonts or frontend
-libraries are bundled.
+graph templates, documentation, launchers, regression tests, selected comparison
+examples and website walkthrough recordings. It does not bundle model weights,
+FFmpeg binaries, Python environments, preprocessor checkouts or a user project
+database. No third-party fonts or frontend libraries are bundled.
 
 ## Example media
 
 `docs/examples/` contains selected input-range GIFs, generated-result GIFs, animated
 comparison wipes, and an HTML viewer with embedded short video previews. They are
-included separately from the GPL application source. The application's GPL grant
+included separately from the GPL application source. `docs/demos/` contains GIF/MP4
+recordings of the website using the selected driving scene and reference images;
+the same media scope applies to the content visible within these recordings.
+The application's GPL grant
 does not grant rights in the underlying source footage, depicted people, reference
 images or generated media. Existing rights and applicable permissions remain with
 their respective holders. No separate reusable-media license is asserted here.

@@ -46,6 +46,17 @@ JavaScript; the HTML page must be opened locally or served by a static host.
 Example media are separate from the application's GPL license; see
 [third-party notices](THIRD_PARTY_NOTICES.md#example-media).
 
+## Website walkthrough
+
+The driving-scene walkthrough shows timeline selection, multiple character samples,
+source atlases, prompt editing, tracking review and the final cost dialog.
+**No Cloud job was submitted during recording.** Prepared media and controls are
+reused; this is an interface guide, not a fresh inference benchmark.
+
+![Timeline and character samples](docs/demos/01-timeline-samples.gif)
+
+[Watch all three GIFs or download the MP4 recordings](docs/demos/README.md).
+
 ## Quick start
 
 Requirements:
@@ -184,6 +195,32 @@ a historical quote, not live pricing. Check your Comfy Cloud account for current
 prices and final charges. A successful local tracking check does not guarantee
 video generation quality.
 
+## Price estimate from maintainer tests
+
+These are approximate **per-generation observations for 7-second videos from the
+maintainer's tests**, not official Comfy Cloud quotes, guarantees or per-second
+prices. Using the maintainer's conversion of **221 Comfy credits = US$1**:
+
+| Output resolution | Tested clip duration | Observed credits per run | Approximate USD at 221 credits / $1 |
+| --- | --- | ---: | ---: |
+| 480p | 7 seconds | 50–70 credits | $0.23–$0.32 |
+| 720p | 7 seconds | 230–350 credits | $1.04–$1.58 |
+| 1080p | Not tested | Not tested | Not estimated |
+
+Duration was checked against the saved 480p and 720p studio-performance jobs:
+both selected 6.084–13.084 seconds and exported **7.000-second review videos
+(168 frames at 24 fps)**. Their raw H3 outputs contain 175 frames (about 7.292
+seconds) before final trimming. Credit ranges above are supplied by the maintainer;
+the local job records do not independently verify the billed credits. The driving
+scene used in the walkthrough is a separate 5.529-second selection, not the
+7-second price example.
+
+USD is calculated as `credits / 221`, rounded to two decimal places. Actual totals
+vary with clip length, processing time and settings; these observations should not
+be extrapolated to every 2–15 second clip. They do not establish whether separate
+Gemini description charges were included. Local trimming and tracking do not submit
+Cloud jobs; description generation and H3 remain separate confirmed submissions.
+
 ## Limitations
 
 - Tracking recovery and shot detection are heuristics, not face recognition or a
@@ -198,8 +235,9 @@ video generation quality.
 - The server is intended for personal localhost use, not public hosting.
 
 The app does not bundle model weights or a user project database. The selected
-comparison media in `docs/examples/` are included for demonstration separately
-from the application source. Use media you have permission to process and share.
+comparison media in `docs/examples/` and walkthrough recordings in `docs/demos/`
+are included for demonstration separately from the application source. Use media
+you have permission to process and share.
 
 ## Development
 

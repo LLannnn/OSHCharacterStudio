@@ -109,8 +109,9 @@ unit tests or tracking review is not proof of accepted H3 video quality.
 Before publishing a source package, inspect the committed file list and archive:
 no credentials, personal paths, local project media, weights, dependency
 environments or prior private Git history. Only the deliberately selected
-`docs/examples/` demo assets belong in this repository; retain their separate
-licensing scope and do not treat other generated results as publication assets. Keep README setup steps, license and third-party notices
+`docs/examples/` and `docs/demos/` demo assets belong in this repository; retain
+their separate licensing scope and do not treat other generated results as
+publication assets. Keep README setup steps, license and third-party notices
 consistent with the actual distributed files.
 
 ## Known limitations
@@ -125,8 +126,8 @@ Do not label these limitations fixed without representative output evidence.
 ## Standalone public repository
 
 This repository starts with a fresh history and contains the release source plus
-`docs/examples/`. It has no remote by default and must not import private workspace
-history. Keep public setup portable; never copy a working installation's config,
+`docs/examples/` and `docs/demos/`. It has no remote by default and must not import
+private workspace history. Keep public setup portable; never copy a working installation's config,
 API keys, model cache, project snapshots or logs into this tree. The example viewer
 embeds its four video previews; its sibling GIF folders provide downloads and
 Markdown previews. Building examples requires original private inputs and is not
@@ -155,3 +156,28 @@ A legacy needs_input result without complete mask/pose/source files must be prep
 again. Failed/incomplete files, changed hashes, invalid inputs, no masks anywhere,
 and unusable pose output remain technical failures; a quality-warning acknowledgement
 does not bypass them. Completed video jobs labelled for visual review remain usable.
+
+
+## Usage recordings and user-reported prices
+
+Maintain public recordings under `docs/demos/` and use an isolated local data folder
+for recording the release UI. Never capture credentials, private config paths or
+unrelated windows. The Barbie case is authorized for the walkthrough. Existing
+prepared inputs, descriptions and control previews may be reused with that stated
+explicitly. No actual Cloud submission is authorized for documentation recording;
+stop at the review dialog and cancel. Do not imply prerecorded controls were freshly
+computed or show a fabricated successful inference. Keep scratch frames/fixtures
+under ignored `verification/`, with only intentional MP4/GIF documentation in Git.
+
+Price observations supplied by the maintainer, all for 7-second generations:
+480p 50–70 credits, 720p 230–350, 1080p untested. Conversion basis: 221 credits per
+US$1. Calculate USD as credits / 221, rounded to two decimal places: $0.23–0.32
+and $1.04–1.58 respectively. Label this empirical per-run guidance, not live provider pricing or a
+universal per-second quote; clip duration/settings matter. Do not assert that Gemini
+fees are included without billing evidence. No extra paid run is needed to document
+these observations. Duration was verified in the saved release studio jobs for
+both resolutions: selected 6.084–13.084 seconds, review video 7.000 seconds / 168
+frames at 24 fps; raw H3 output 175 frames before trimming. Local records do not
+verify billed credits. Keep this distinct from the driving walkthrough's
+5.529-second selected range. Never publish private project IDs or job snapshots
+as documentation evidence.
