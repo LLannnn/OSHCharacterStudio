@@ -33,15 +33,28 @@ new appearance. Keep the A/B pairing consistent throughout.
 Generating descriptions is optional when using existing descriptions or a prompt.
 It is a separate, explicitly confirmed Cloud operation, not shown being run here.
 
-## 3. Tracking review and cost confirmation
+## 3. Character mask and skeleton check
 
-Scrub the tracking timeline, play saved mask and pose previews, approve the reviewed
-controls, inspect the exact inputs, then open the cost dialog and **Cancel**.
-Opening this dialog does not submit a Cloud job.
+In step 2 of the app, use **Prepare tracking and motion previews** to prepare the
+character masks (EdgeTAM) and skeleton motion (DWPose) locally. This recording
+starts with saved results and shows the review, not the preparation running.
 
-![Tracking, masks, poses and cancelled cost confirmation](03-controls-review.gif)
+Scrub the tracking timeline and play both previews:
+
+- **Mask overlay:** red should follow A and blue should follow B. Check for missing
+  areas, accidental coverage of the other character and tracking loss after cuts.
+- **Motion preview:** the skeleton should align with the intended person's body
+  and follow their movement without jumping to the other person.
+- **Marked ranges:** inspect crossings, entrances, exits and shot changes. Add
+  source samples in missed ranges and retry when needed.
+
+![Character mask tracking, skeleton motion and cancelled cost confirmation](03-controls-review.gif)
 
 [MP4 · 15 seconds](03-controls-review.mp4) · [GIF](03-controls-review.gif)
+
+After checking the previews, approve the controls and review the clip, reference
+images and prompt. The recording then opens the cost dialog and chooses **Cancel**.
+Opening this dialog does not submit a Cloud job.
 
 If your timeline has review items, the red warning recommends adding samples and
 retrying, or splitting the video into shorter replacement tasks. You can explicitly

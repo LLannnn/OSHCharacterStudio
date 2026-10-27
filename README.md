@@ -44,12 +44,26 @@ Example media are separate from the application's GPL license; see
 
 ## Website walkthrough
 
-The driving-scene walkthrough shows timeline selection, multiple character samples,
-source atlases, prompt editing, tracking review and the final cost dialog.
+The driving-scene walkthrough covers selecting characters, editing the prompt,
+and checking character masks and skeleton motion before generation.
 **No Cloud job was submitted during recording.** Prepared media and controls are
 reused; this is an interface guide, not a fresh inference benchmark.
 
+### 1. Select the clip and character samples
+
 ![Timeline and character samples](docs/demos/01-timeline-samples.gif)
+
+### 2. Review the inputs and prompt
+
+![Input and prompt review](docs/demos/02-inputs-prompt.gif)
+
+### 3. Check character masks and skeleton motion
+
+![Character masks, skeleton motion and final review](docs/demos/03-controls-review.gif)
+
+Check that each colored mask follows the correct character and the skeleton follows
+their body movements, including after cuts. If tracking misses a character or jumps
+to someone else, add samples in that range and retry before approving the previews.
 
 [Watch all three GIFs or download the MP4 recordings](docs/demos/README.md).
 

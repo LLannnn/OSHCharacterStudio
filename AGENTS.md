@@ -176,6 +176,10 @@ explicitly. No actual Cloud submission is authorized for documentation recording
 stop at the review dialog and cancel. Do not imply prerecorded controls were freshly
 computed or show a fabricated successful inference. Keep scratch frames/fixtures
 under ignored `verification/`, with only intentional MP4/GIF documentation in Git.
+Show character-mask and skeleton review explicitly in the main README walkthrough,
+including the recording and what to check after cuts and around other people.
+Do not bury that stage behind the walkthrough link or imply that playing saved
+previews runs EdgeTAM/DWPose preparation.
 
 Price guidance supplied by the maintainer, expressed per 7-second generation:
 480p 50–70 credits, 720p approximately 281–350, 1080p untested. The 720p lower
