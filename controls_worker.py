@@ -204,7 +204,7 @@ def main(path):
         expected={k:{p['sample_id'] for p in review.get('samples',{}).get(k,[])} for k in issue['labels']}
         issue['samples_exhausted']=all(expected[k].issubset(tested[k]) for k in expected)
     if descriptions:
-        quality['note']='Source descriptions locate people after cuts and losses. Uncertain matches pause for review. Check the preview; boxes and tracks do not guarantee identity.'
+        quality['note']='Source descriptions locate people after cuts and losses. Uncertain matches remain flagged for explicit review. Check the preview; boxes and tracks do not guarantee identity.'
         for issue in quality['issues']:
             issue['reason']='Different frames and appearance queries did not resolve this role. Other valid tracks are preserved. Edit the source description or confirm absence / occlusion.'
     save(out/'text-locations.json',dict(descriptions=descriptions,anchors=auto_anchors,detections=detections,
@@ -236,31 +236,8 @@ def main(path):
     np.savez_compressed(out/'tracking.npz', **raw)
     save(out/'tracking-boxes.json', dict(prompts=prompts, boxes=boxes, presence=presence,
                                        device=device, proxy_size=[proxy_w,proxy_h], source_transform=tr))
-    if quality['requires_input']:
-        progress('needs_input','Some shots remain unresolved. Check source descriptions or confirm normal absence before preparing DWPose.')
-        # Encode only a proxy overlay; no control files are considered ready.
-        with (out/'preview-encode.log').open('w') as log:
-            encoder=subprocess.Popen([ff,'-v','error','-y','-f','rawvideo','-pix_fmt','rgb24',
-                '-s',f'{proxy_w}x{proxy_h}','-r','24','-i','-','-an','-c:v','libx264',
-                '-crf','18','-threads','1','-pix_fmt','yuv420p','-movflags','+faststart',
-                str(out/'mask-overlay.mp4')],stdin=subprocess.PIPE,stderr=log)
-            try:
-                for i in range(n):
-                    overlay=video[i].copy()
-                    for label,color in [('A',[255,51,51]),('B',[51,128,255])]:
-                        if label in masks:
-                            selected=masks[label][i]
-                            overlay[selected]=(overlay[selected]*.55+np.array(color)*.45).astype(np.uint8)
-                    encoder.stdin.write(overlay.tobytes())
-                encoder.stdin.close()
-                if encoder.wait(timeout=120):raise ValueError('Could not encode the tracking review preview.')
-            finally:
-                if encoder.poll() is None:encoder.kill()
-                encoder.wait()
-        save(out/'manifest.json',dict(requires_input=True,quality=quality,files={},hashes={},
-             previews={'mask':'mask-overlay.mp4'},presence=presence,source_frames=n,
-             fps=24,width=w,height=h,cloud_calls=0,elapsed=round(time.monotonic()-started,2)))
-        return
+    # Tracking gaps remain visible warnings. Export usable controls so users can
+    # explicitly accept those warnings without clearing them or fabricating masks.
     if not union.any():
         raise ValueError('No character masks were found. Check that the selected people appear in this clip.')
     progress('pose', 'Loading DWPose and extracting body poses from original-resolution person regions.')
@@ -359,6 +336,7 @@ def main(path):
             if p.poll() is None:
                 p.kill()
             p.wait()
+        decoder.stdout.close()
         log.close()
     if any(not pose_counts[k] for k in pose_counts if raw[k].any()):
         raise ValueError('At least one role has no usable poses. Choose a clearer keyframe or a larger source box.')
@@ -373,7 +351,7 @@ def main(path):
         actual = probe(out/name)
         if (actual['width'],actual['height']) != (w,h) or abs(actual['fps']-24)>.01 or abs(actual['duration']-target_frames/24)>.05:
             raise ValueError('Control video dimensions, frame counts or frame rates differ.')
-    manifest = dict(requires_input=False, quality=quality, files=files, hashes={k:hash_file(out/v) for k,v in files.items()},
+    manifest = dict(requires_input=quality['requires_input'], quality=quality, files=files, hashes={k:hash_file(out/v) for k,v in files.items()},
                     previews={'mask':'mask-overlay.mp4','pose':'pose-overlay.mp4'},
                     presence=presence, pose_nonempty_frames=pose_counts, frames=target_frames,
                     source_frames=n, width=w, height=h, fps=24, mask_polarity='white=regenerate',
@@ -382,7 +360,7 @@ def main(path):
                     pose_model_sha256=hash_file(Path(request['runtime']['control_pose_model'])),
                     settings=request['settings'], cloud_calls=0, elapsed=round(time.monotonic()-started,2))
     save(out/'manifest.json', manifest)
-    progress('completed', 'Controls are ready. Review the mask and pose previews, then approve them.')
+    progress('completed', 'Controls are ready with tracking warnings. Inspect the previews and explicitly accept warnings to continue.' if quality['requires_input'] else 'Controls are ready. Review the mask and pose previews, then approve them.')
 
 
 if __name__ == '__main__':

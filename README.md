@@ -121,12 +121,27 @@ do not commit your actual `data/config.json` or key file.
    return to step 1 and add samples or revise its locator description. Sample-only
    edits retain the prepared clip, replacement references and existing prompt;
    a notice recommends regenerating descriptions without requiring it.
-8. Resolve tracking review items, then approve the current controls. Review the
+8. Resolve tracking review items, or explicitly accept the red tracking warning,
+   then approve the current controls. Review the
    H3 graph and cost disclosure, confirm and submit once.
 
 Prompt generation never automatically starts H3. Submissions are not retried
 when the network times out. If a job has a Cloud ID, resume polling that same job
 instead of submitting again. Stopping the local app does not cancel a Cloud job.
+
+## Tracking warnings
+
+A few missed or uncertain frames show a **red warning**, not a permanent workflow
+block. The app keeps valid tracks and still prepares the available mask/pose files.
+The warning recommends adding source samples in the missed ranges and retrying, or
+splitting the video into shorter replacement tasks and joining their results.
+
+To proceed anyway, check **I understand these tracking warnings and want to continue
+anyway**, then approve the mask/pose previews and use the usual paid-submission
+confirmation. The final dialog repeats the warning. Missing areas may remain
+unchanged or be replaced incorrectly. This does not start additional tasks for you.
+Changing samples, descriptions or the warning issues requires a new acknowledgement.
+Missing/corrupted control files and local execution failures still need repair.
 
 ## Processing settings
 
@@ -197,6 +212,7 @@ python -m unittest discover -s tests -p 'test_*.py'
 node tests/timeline.test.js
 node tests/samples.test.js
 node tests/descriptions.test.js
+node tests/warnings.test.js
 node --check web/app.js
 node --check web/timeline.js
 node --check web/review-timeline.js
@@ -208,7 +224,7 @@ weights and make no paid inference calls. FFmpeg-dependent tests require FFmpeg.
 The GitHub Actions workflow runs these checks on Linux; it is not a Windows/GPU
 inference certification.
 
-See [agent.md](agent.md) for architecture, state invariants, validation requirements
+See [AGENTS.md](AGENTS.md) for architecture, state invariants, validation requirements
 and known constraints. Keep fixes focused and include a regression for changes to
 tracking assignment, source samples or submission integrity.
 

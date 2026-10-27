@@ -55,9 +55,17 @@ def options(data):
 def identity(checkpoint, settings, review=None):
     # Strength affects sampling, not locally prepared pixels.
     value = {'checkpoint': checkpoint, 'mode': settings['mask_mode'], 'grow': settings['grow_px'],
-             'edge_model': EDGE_MODEL, 'edge_revision': EDGE_REVISION, 'worker_version': 5,
+             'edge_model': EDGE_MODEL, 'edge_revision': EDGE_REVISION, 'worker_version': 6,
              'review': review or {'anchors': [], 'decisions': [], 'ignored_boundaries': []}}
     return hashlib.sha256(json.dumps(value, sort_keys=True).encode()).hexdigest()
+
+
+def warning_signature(quality):
+    """Bind an explicit tracking-warning acknowledgement to the actual issues."""
+    if not quality.get('requires_input') and not quality.get('issues'):
+        return None
+    payload = {'requires_input': bool(quality.get('requires_input')), 'issues': quality.get('issues', [])}
+    return hashlib.sha256(json.dumps(payload, sort_keys=True).encode()).hexdigest()
 
 
 def execute(request, folder, config):

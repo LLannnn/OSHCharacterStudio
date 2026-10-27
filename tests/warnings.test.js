@@ -1,0 +1,17 @@
+const assert=require('node:assert/strict');
+const fs=require('node:fs');
+const vm=require('node:vm');
+const path=require('node:path');
+const source=fs.readFileSync(path.join(__dirname,'../web/app.js'),'utf8');
+const functions=source.slice(source.indexOf('function controlAvailability('),source.indexOf('async function refreshControls('));
+const context={};vm.createContext(context);vm.runInContext(functions,context);
+const full={valid:true,status:'needs_input',files:{control_mask:'m',control_pose:'p',control_source:'s'},previews:{mask:'m',pose:'p'},quality:{requires_input:true,issues:[{labels:['A'],start:24,end:30}]},manifest:{fps:24}};
+assert.equal(context.controlAvailability(full).ready,true);
+assert.equal(context.controlAvailability(full).warnings,true);
+assert.equal(context.controlAvailability(full).needsReview,true);
+assert.match(context.warningSummary(full),/A · 1.00–1.25s/);
+assert.equal(context.controlAvailability({...full,files:{}}).ready,false);
+assert.equal(context.controlAvailability(full,true).ready,false);
+assert.equal(context.controlAvailability({...full,status:'failed'}).ready,false);
+assert.equal(context.controlAvailability({...full,status:'completed',quality:{}}).warnings,false);
+console.log('Tracking warnings: usable files remain reviewable, dirty/incomplete/failed states blocked; exact ranges displayed.');

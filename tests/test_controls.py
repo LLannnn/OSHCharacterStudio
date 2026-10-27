@@ -44,6 +44,68 @@ class ControlsTests(unittest.TestCase):
         p=app.project(self.pid);p['control_run']={'id':cid};app.save_project(p)
         return cid,folder
 
+    def warned(self):
+        cid,folder=self.ready()
+        record=app.read_json(folder/'control.json')
+        record.update(status='needs_input',quality={'requires_input':True,'issues':[
+            dict(id='missing:A:24:30',kind='missing',labels=['A'],start=24,end=30)]})
+        app.write_json(folder/'control.json',record)
+        return cid,folder
+
+    def test_tracking_warning_requires_explicit_ack_then_allows_plan(self):
+        cid,folder=self.warned()
+        with self.assertRaises(ValueError):app.approve_controls(self.pid,cid)
+        with self.assertRaises(ValueError):app.approve_controls(self.pid,cid,accept_tracking_warnings='true')
+        with self.assertRaises(ValueError):app.make_plan(self.pid,'video','prompt')
+        state=app.approve_controls(self.pid,cid,accept_tracking_warnings=True)
+        self.assertTrue(state['approved']);self.assertTrue(state['tracking_warnings_accepted'])
+        self.assertEqual(state['status'],'needs_input')
+        plan=app.make_plan(self.pid,'video','prompt')
+        self.assertEqual(plan['tracking_warnings'][0]['id'],'missing:A:24:30')
+        self.assertTrue(app.read_json(folder/'control.json')['quality']['requires_input'])
+        app.approve_controls(self.pid,cid,False)
+        with self.assertRaises(ValueError):app.make_plan(self.pid,'video','prompt')
+
+    def test_warning_ack_cannot_bypass_missing_files_failed_status_or_changed_hashes(self):
+        cid,folder=self.warned();record=app.read_json(folder/'control.json')
+        for changes in [dict(files={}),dict(hashes={}),dict(status='failed')]:
+            app.write_json(folder/'control.json',dict(record,**changes))
+            with self.assertRaises(ValueError):app.approve_controls(self.pid,cid,accept_tracking_warnings=True)
+        app.write_json(folder/'control.json',record)
+        (folder/'control_mask.mp4').write_bytes(b'changed')
+        with self.assertRaises(ValueError):app.approve_controls(self.pid,cid,accept_tracking_warnings=True)
+
+    def test_changed_warnings_revoke_ack_and_old_plan_even_after_reapproval(self):
+        cid,folder=self.warned();app.approve_controls(self.pid,cid,accept_tracking_warnings=True)
+        plan=app.make_plan(self.pid,'video','prompt')
+        record=app.read_json(folder/'control.json');record['quality']['issues'][0]['end']=36
+        app.write_json(folder/'control.json',record)
+        self.assertFalse(app.control_state(self.pid)['approved'])
+        with self.assertRaises(ValueError):app.make_plan(self.pid,'video','prompt')
+        app.approve_controls(self.pid,cid,accept_tracking_warnings=True)
+        with patch.object(app,'read_key',return_value='fixture'),patch.object(threading.Thread,'start'):
+            with self.assertRaises(ValueError):app.accept_plan(plan['id'],plan['fingerprint'],True)
+        self.assertEqual(app.project(self.pid)['jobs'],[])
+
+    def test_acknowledged_warning_can_submit_once_through_mock_cloud(self):
+        cid,_=self.warned();app.approve_controls(self.pid,cid,accept_tracking_warnings=True)
+        plan=app.make_plan(self.pid,'video','prompt');submitted=[]
+        class FakeCloud:
+            def __init__(self,c):pass
+            def upload(self,path):return path.name
+            def submit(self,graph,jid):submitted.append(graph);return 'fixture-cloud-id'
+            def close(self):pass
+            def safe_error(self,e):return str(e)
+        with patch.object(app,'read_key',return_value='fixture'),patch.object(threading.Thread,'start'):
+            job=app.accept_plan(plan['id'],plan['fingerprint'],True)
+        snapshot=app.read_json(app.job_path(self.pid,job['id'])/'snapshot.json')
+        self.assertTrue(snapshot['tracking_warning_signature'])
+        with patch.object(app,'Cloud',FakeCloud),patch.object(app,'guarded_monitor'):
+            app.submit_worker(self.pid,job['id'],snapshot)
+        self.assertEqual(len(submitted),1)
+        self.assertEqual(app.read_json(app.job_path(self.pid,job['id'])/'job.json')['prompt_id'],'fixture-cloud-id')
+        with self.assertRaises(ValueError):app.accept_plan(plan['id'],plan['fingerprint'],True)
+
     def test_runtime_readiness_requires_actual_model_paths(self):
         with patch.object(controls,'ROOT',self.base),patch.dict(os.environ,{},clear=True):
             self.assertFalse(controls.runtime({})['paths_ready'])

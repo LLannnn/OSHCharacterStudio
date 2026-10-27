@@ -304,6 +304,8 @@ async function openPlan(kind){
   $('confirmTitle').textContent=kind==='prompt'?'Generate descriptions only':'Generate replacement video only';
   const count=pendingPlan.character_count;
   $('confirmInputs').textContent=(count===1?'One character: ':'Two characters: ')+(kind==='prompt'?`1 clip + ${count*2} ordered character images. Generates descriptions only.`:`1 clip + ${count} reference images + reviewed prompt, masks and DWPose controls. Union 2.0 video generation only.`);
+  $('confirmTrackingWarning').hidden=!pendingPlan.tracking_warnings?.length;
+  $('confirmTrackingWarning').textContent=pendingPlan.tracking_warnings?.length?`You accepted ${pendingPlan.tracking_warnings.length} unresolved tracking warning(s). Missing frames may remain unchanged or be replaced incorrectly. Add samples and retry, or split into shorter replacement tasks if needed. This submission uses the available controls.`:'';
   $('graphPreview').textContent=JSON.stringify(pendingPlan.graph,null,2);
   $('acceptCost').checked=false;$('confirmSubmit').disabled=true;$('confirmDialog').showModal();
 }
@@ -335,24 +337,41 @@ async function saveGeneration(){
   const pid=current.id,serial=descriptionEditSerial,r=await api('/api/generation',generationPayload());
   if(current.id===pid){current.generation=r.generation;current.tracking_descriptions=r.tracking_descriptions;current.facts=r.facts;pendingPlan=null;if(serial===descriptionEditSerial)renderGeneration();}
 }
+function controlAvailability(record,inputsChanged=false){
+  const current=!inputsChanged&&record.valid;
+  const ready=!!(current&&['completed','needs_input'].includes(record.status)&&['control_mask','control_pose','control_source'].every(k=>record.files?.[k])&&record.previews?.mask&&record.previews?.pose);
+  const warnings=!!(current&&(record.quality?.requires_input||record.quality?.issues?.length));
+  return {ready,warnings,needsReview:!!(current&&(record.status==='needs_input'||warnings))};
+}
+function warningSummary(record){
+  const issues=record.quality?.issues||[],fps=record.manifest?.fps||24;
+  return issues.length?issues.map(i=>`${i.labels.join('/')} · ${(i.start/fps).toFixed(2)}–${(i.end/fps).toFixed(2)}s`).join('; '):'Some tracking ranges remain uncertain.';
+}
 async function refreshControls(){
   clearTimeout(controlPolling);if(!current)return;
   const pid=current.id,r=await api('/api/controls/'+pid,undefined,'GET');if(current.id!==pid)return;
-  controlRecord=r;
-  const ready=!dirty&&!sampleDirty&&!descriptionsDirty&&r.valid&&r.status==='completed';
-  const needsInput=!dirty&&!sampleDirty&&!descriptionsDirty&&r.valid&&r.status==='needs_input';
+  const previous=controlRecord;controlRecord=r;
+  const {ready,warnings,needsReview}=controlAvailability(r,dirty||sampleDirty||descriptionsDirty);
+  const needsInput=needsReview;
+  if(previous?.id!==r.id||JSON.stringify(previous?.quality?.issues)!==JSON.stringify(r.quality?.issues)||!warnings||!ready)$('acceptTrackingWarnings').checked=false;
+  if(r.tracking_warnings_accepted)$('acceptTrackingWarnings').checked=true;
   $('trackingIssues').hidden=!needsInput;
   renderTrackingIssues(needsInput?r:null);
+  $('trackingWarning').hidden=!warnings;
+  $('trackingWarningSummary').textContent=warningSummary(r)+(ready?' Available mask and pose files are ready.':' Complete control files are not available yet; prepare local controls again.');
+  $('acceptTrackingWarnings').disabled=!ready;
   $('controlPreviews').hidden=!ready;$('controlReviewed').checked=ready&&r.approved;
+  $('controlReviewed').disabled=!ready||(warnings&&!$('acceptTrackingWarnings').checked);
   $('prepareControls').disabled=r.status==='running'||dirty||!current.prepared;
   const text=r.status==='running'?(r.progress.detail||'Preparing locally. Please wait…'):
     r.status==='failed'||r.status==='interrupted'?(r.error||'Local preparation failed.'):
-    needsInput?`After ${r.quality?.recovery?.length||0} local recovery passes, some roles remain unresolved. Other valid tracks are preserved. Edit the source description and retry, or confirm normal absence.`:
+    needsInput&&r.approved?'Tracking warnings accepted. Controls approved; review and submit the video when ready.':
+    needsInput?`Some tracking ranges need review. Add samples and retry, split into shorter replacement tasks, or accept the red warning to continue${ready?' with the available controls':'; prepare complete controls first'}.`:
     ready?(r.approved?'Controls approved. Review and submit the video when ready.':'Controls ready. Play both previews and approve the character tracking and poses.'):
     descriptionsDirty?'Locator descriptions changed. Save them or prepare local controls.':
     dirty||!current.prepared?'Return to step 1 and prepare video and character inputs.':'Controls are not ready for the current inputs. Prepare them locally.';
-  $('controlStatus').textContent=text;$('controlStatus').classList.toggle('error',['failed','interrupted'].includes(r.status));
-  $('generateVideo').disabled=!ready||!r.approved;
+  $('controlStatus').textContent=text;$('controlStatus').classList.toggle('error',warnings||['failed','interrupted'].includes(r.status));
+  $('generateVideo').disabled=!ready||!r.approved||(warnings&&!$('acceptTrackingWarnings').checked);
   if(ready){
     for(const [id,role] of [['maskPreview','mask'],['posePreview','pose']]){const url=fileUrl(r.previews[role]);if($(id).getAttribute('src')!==url)$(id).src=url;}
     $('controlPresence').textContent=Object.entries(r.manifest.presence).map(([label,p])=>`${label}: tracked ${p.nonempty_frames} frames${p.nonempty_frames?`, clip ${p.first_seconds.toFixed(2)}–${p.last_seconds.toFixed(2)}s`:''}; valid pose ${r.manifest.pose_nonempty_frames[label]} frames`).join('; ')+`. Automatic source locations: ${r.quality?.auto_anchors?.length||0}. Undetected frames have empty masks. Check crossings, entrances, exits and small people.`;
@@ -373,7 +392,8 @@ $('saveTrackingDescriptions').onclick=action(async()=>{await saveGeneration();aw
 async function prepareLocalControls(){await updateSampleInputs();await saveGeneration();await api('/api/controls/start',{project_id:current.id});await refreshControls();notify('Independent local tracking and automatic source location started.');}
 $('prepareControls').onclick=action(prepareLocalControls);
 $('retryTracking').onclick=action(prepareLocalControls);
-$('controlReviewed').onchange=action(async()=>{await api('/api/controls/approve',{project_id:current.id,control_id:controlRecord.id,approved:$('controlReviewed').checked});await refreshControls();});
+$('controlReviewed').onchange=action(async()=>{await api('/api/controls/approve',{project_id:current.id,control_id:controlRecord.id,approved:$('controlReviewed').checked,accept_tracking_warnings:$('acceptTrackingWarnings').checked});await refreshControls();});
+$('acceptTrackingWarnings').onchange=action(async()=>{const accepted=$('acceptTrackingWarnings').checked;if(!accepted&&controlRecord?.approved){await api('/api/controls/approve',{project_id:current.id,control_id:controlRecord.id,approved:false});await refreshControls();}$('controlReviewed').checked=accepted&&!!controlRecord?.approved;$('controlReviewed').disabled=!accepted;$('generateVideo').disabled=true;});
 function renderTrackingIssues(record){
   const list=$('trackingIssueList');list.replaceChildren();if(!record)return;
   const url=fileUrl(record.previews.mask);if($('trackingReviewVideo').getAttribute('src')!==url)$('trackingReviewVideo').src=url;

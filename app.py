@@ -348,6 +348,10 @@ def control_state(pid):
     settings = controls.options(p.get('generation', {}))
     record['valid'] = not p.get('sample_inputs_changed') and bool(p.get('prepared')) and record.get('identity') == controls.identity(
         p['prepared'], settings, tracking_inputs(p,p['prepared']))
+    warning = controls.warning_signature(record.get('quality', {}))
+    record['tracking_warnings_accepted'] = bool(warning and record.get('approved') and record.get('accepted_tracking_warnings') == warning)
+    if warning and record.get('approved') and not record['tracking_warnings_accepted']:
+        record['approved'] = False
     record['progress'] = read_json(folder / 'progress.json', {})
     if record.get('status') == 'running' and (pid, ref['id']) not in CONTROL_RUNS:
         record.update(status='interrupted', error='Local preparation was interrupted. Prepare the controls again.')
@@ -491,24 +495,34 @@ def start_controls(pid):
 
 def checked_controls(pid, reviewed=False):
     state = control_state(pid)
-    if not state.get('valid') or state.get('status') != 'completed':
+    if not state.get('valid') or state.get('status') not in ('completed', 'needs_input'):
         raise ValueError('Prepare masks and DWPose controls for the current inputs first.')
+    required = {'control_mask', 'control_pose', 'control_source'}
+    if not required.issubset(state.get('files', {})) or not required.issubset(state.get('hashes', {})):
+        raise ValueError('Complete mask, DWPose and source files are required. Prepare the controls again.')
     if reviewed and not state.get('approved'):
         raise ValueError('Review and approve the mask and pose previews first.')
+    warning = controls.warning_signature(state.get('quality', {}))
+    if reviewed and warning and state.get('accepted_tracking_warnings') != warning:
+        raise ValueError('Explicitly accept the current tracking warnings before submitting.')
     for role, rel in state['files'].items():
         if hash_file(path_in_project(pid, rel)) != state['hashes'][role]:
             raise ValueError('Control files changed. Prepare and review them again.')
     return state
 
 
-def approve_controls(pid, cid, approved=True):
+def approve_controls(pid, cid, approved=True, accept_tracking_warnings=False):
     with LOCK:
         state = checked_controls(pid)
         if state['id'] != cid:
             raise ValueError('Controls changed. Review the latest previews.')
         folder = project_dir(pid)/'controls'/checked_id(cid)
         record = read_json(folder/'control.json')
-        record.update(approved=approved, reviewed=time.time() if approved else None)
+        warning = controls.warning_signature(state.get('quality', {}))
+        if approved and warning and accept_tracking_warnings is not True:
+            raise ValueError('Confirm that you want to continue despite the tracking warnings.')
+        record.update(approved=approved, reviewed=time.time() if approved else None,
+                      accepted_tracking_warnings=warning if approved else None)
         write_json(folder/'control.json',record)
     return control_state(pid)
 
@@ -552,7 +566,9 @@ def make_plan(pid, kind, prompt='', requested_count=None):
         save_project(p)
     snapshot = {'project_id': pid, 'kind': kind, 'checkpoint': copy.deepcopy(c),
                 'prompt': prompt.strip(), 'graph': graph, 'character_count': count,
-                'generation': generation, 'control_id': control['id'] if control else None}
+                'generation': generation, 'control_id': control['id'] if control else None,
+                'tracking_warning_signature': controls.warning_signature(control.get('quality', {})) if control else None,
+                'tracking_warnings': copy.deepcopy(control.get('quality', {}).get('issues', [])) if control else []}
     fingerprint = hashlib.sha256(json.dumps(snapshot, sort_keys=True).encode()).hexdigest()
     plan_id = uuid.uuid4().hex
     with LOCK:
@@ -564,7 +580,8 @@ def make_plan(pid, kind, prompt='', requested_count=None):
     if kind == 'video' and c.get('resolution') == 'source':
         detail += ' Original-resolution generation uses a larger canvas and may take longer and cost more.'
     return {'id': plan_id, 'fingerprint': fingerprint, 'kind': kind, 'cost': quote(kind)+detail,
-            'graph': graph, 'checkpoint': c, 'character_count': count, 'generation': generation}
+            'graph': graph, 'checkpoint': c, 'character_count': count, 'generation': generation,
+            'tracking_warnings': snapshot['tracking_warnings']}
 
 
 def job_path(pid, jid):
@@ -603,8 +620,10 @@ def accept_plan(plan_id, fingerprint, accepted):
         if s['kind'] == 'video':
             if controls.options(p.get('generation', {})) != s.get('generation', controls.options({})):
                 raise ValueError('Generation settings changed. Review again.')
-            if s.get('control_id') and checked_controls(p['id'], reviewed=True)['id'] != s['control_id']:
-                raise ValueError('Controls changed. Review this submission again.')
+            if s.get('control_id'):
+                current_control = checked_controls(p['id'], reviewed=True)
+                if current_control['id'] != s['control_id'] or controls.warning_signature(current_control.get('quality', {})) != s.get('tracking_warning_signature'):
+                    raise ValueError('Controls or tracking warnings changed. Review this submission again.')
         for role, rel in s['checkpoint']['files'].items():
             if hash_file(path_in_project(p['id'], rel)) != s['checkpoint']['hashes'][role]:
                 raise ValueError('Input files changed. Prepare them again.')
@@ -886,7 +905,8 @@ class Handler(BaseHTTPRequestHandler):
             if url.path == '/api/controls/start':
                 return self.send_json(start_controls(pid))
             if url.path == '/api/controls/approve':
-                return self.send_json(approve_controls(pid, data['control_id'], data.get('approved', True) is True))
+                return self.send_json(approve_controls(pid, data['control_id'], data.get('approved', True) is True,
+                                                        data.get('accept_tracking_warnings') is True))
             if url.path == '/api/controls/timeline':
                 return self.send_json(control_timeline(pid,data['control_id']))
             if url.path == '/api/controls/correct':

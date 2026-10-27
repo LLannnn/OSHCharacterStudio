@@ -108,7 +108,9 @@ model just to bypass validation.
   directory; install dependencies in the model environment.
 - **Pose model cannot load:** check the ONNX path and OpenCV/ONNX Runtime setup.
 - **Tracking needs review:** inspect the timeline, add source samples in that shot
-  or revise source-only descriptions. This is not necessarily a setup problem.
+  or revise source-only descriptions. You can also split into shorter replacement
+  tasks. When complete controls are available, explicitly accept the red warning
+  to continue anyway. This is not necessarily a setup problem.
 - **Cloud validation error:** inspect the exported graph and exact model names.
   Retain the job ID; do not automatically submit a replacement job.
 
