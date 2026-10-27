@@ -182,18 +182,19 @@ video generation quality.
 
 ## Price estimate from maintainer tests
 
-These are approximate **per-generation observations for 7-second videos from the
-maintainer's tests**, not official Comfy Cloud quotes, guarantees or per-second
-prices. Using the maintainer's conversion of **221 Comfy credits = US$1**:
+These are approximate **cost estimates for 7-second videos based on the
+maintainer's tests**, not official Comfy Cloud quotes or guarantees.
+Using the maintainer's conversion of **221 Comfy credits = US$1**:
 
-| Output resolution | Tested clip duration | Observed credits per run | Approximate USD at 221 credits / $1 |
+| Output resolution | Video duration | Estimated credits per run | Approximate USD at 221 credits / $1 |
 | --- | --- | ---: | ---: |
 | 480p | 7 seconds | 50–70 credits | $0.23–$0.32 |
-| 720p | 7 seconds | 230–350 credits | $1.04–$1.58 |
+| 720p | 7 seconds | 281–350 credits | $1.27–$1.58 |
 | 1080p | Not tested | Not tested | Not estimated |
 
-Both resolutions were checked against saved jobs with 7.000-second final videos.
-The driving walkthrough uses a separate 5.529-second selection.
+The 720p lower estimate comes from the Barbie clip: **222 credits for 5.529 seconds**,
+scaled to 7 seconds as `222 × 7 / 5.529 ≈ 281 credits` (about **$1.27**).
+This is a duration-based estimate, not a measured 7-second charge.
 
 USD is calculated as `credits / 221`. Actual costs vary with clip length and
 settings. Budget separately for Gemini descriptions; these estimates do not confirm

@@ -67,7 +67,7 @@ it does not demonstrate the warning override.
   playback compatibility, not recordings of a completed generation job.
 - The historical GPU rate visible in the dialog is not a live quote. See the
   [maintainer's empirical price estimates](../../README.md#price-estimate-from-maintainer-tests)
-  for observed per-run credits and the stated conversion basis.
+  for 7-second cost estimates and the stated conversion basis.
 
 The source footage, depicted people, reference images and generated media remain
 outside the application's GPL grant. See [third-party notices](../../THIRD_PARTY_NOTICES.md#example-media).

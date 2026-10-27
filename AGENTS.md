@@ -177,10 +177,14 @@ stop at the review dialog and cancel. Do not imply prerecorded controls were fre
 computed or show a fabricated successful inference. Keep scratch frames/fixtures
 under ignored `verification/`, with only intentional MP4/GIF documentation in Git.
 
-Price observations supplied by the maintainer, all for 7-second generations:
-480p 50–70 credits, 720p 230–350, 1080p untested. Conversion basis: 221 credits per
+Price guidance supplied by the maintainer, expressed per 7-second generation:
+480p 50–70 credits, 720p approximately 281–350, 1080p untested. The 720p lower
+estimate replaces the earlier 230-credit figure: the maintainer identified the
+222-credit run as Barbie, whose selected duration is 5.529 seconds. Normalize
+that charge as 222 × 7 / 5.529 = 281.063 credits (rounded to 281). Label it a
+duration-based estimate, not a measured 7-second charge. Conversion basis: 221 credits per
 US$1. Calculate USD as credits / 221, rounded to two decimal places: $0.23–0.32
-and $1.04–1.58 respectively. Label this empirical per-run guidance, not live provider pricing or a
+and $1.27–1.58 respectively. Label this empirical per-run guidance, not live provider pricing or a
 universal per-second quote; clip duration/settings matter. Do not assert that Gemini
 fees are included without billing evidence. No extra paid run is needed to document
 these observations. Duration was verified in the saved release studio jobs for
