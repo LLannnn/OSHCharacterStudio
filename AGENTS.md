@@ -11,6 +11,14 @@ remain editable. Preserve the English interface, one/two-character support and
 multiple source samples. Do not restore V1, pixel masks, SDPose or a grey-reference
 preprocessing path as part of routine cleanup.
 
+Keep the main README and interface focused on user actions and results. Do not
+advertise fixed internal choices such as V2/bbox, model precision, sampling seed,
+canvas padding or internal pipeline names. Use plain labels such as "Guidance
+strength" for the Union strength setting. Preserve editable settings, output
+resolution, tracking warnings, upload disclosure and paid confirmation. Keep
+technical details in this guide, model setup, or collapsed advanced sections;
+tracking statistics, box coordinates and job IDs should be available on demand.
+
 Prompt generation and H3 are independent stages. No automatic chaining, paid
 retries or model substitutions. New paid tests require explicit approval covering
 the model, settings, number of calls and disclosed cost or unknown total. Local

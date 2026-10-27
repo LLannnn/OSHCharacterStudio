@@ -532,7 +532,7 @@ def quote(kind):
     return ('Gemini 3.1 Flash-Lite: one request, up to 2,048 output tokens. Historical node quote: '
             '$0.00025/1K input tokens and $0.0015/1K output tokens; Cloud GPU runtime may also be charged. '
             if kind == 'prompt' else
-            'MiniMax H3 ref2va: one video generation, full 20 steps, no Partner Node fee. ') + (
+            'MiniMax H3: one video generation, no Partner Node fee. ') + (
             'Historical Cloud GPU quote: 0.266 credits per active second (workspace record, 2026-10-25). '
             'Check the platform for current prices. Final total unknown. No automatic retries.')
 
@@ -575,10 +575,10 @@ def make_plan(pid, kind, prompt='', requested_count=None):
         # Plans expire and are single-use. Confirmation binds exactly this graph/media.
         PLANS[plan_id] = {'snapshot': snapshot, 'fingerprint': fingerprint,
                           'created': time.time(), 'consumed': False}
-    detail = (' V2: Union 2.0 INT8 + EdgeTAM masks + DWPose, strength '+str(generation['strength'])+'.'
+    detail = (' Guidance strength: '+str(generation['strength'])+'.'
               if kind == 'video' and control else '')
     if kind == 'video' and c.get('resolution') == 'source':
-        detail += ' Original-resolution generation uses a larger canvas and may take longer and cost more.'
+        detail += ' Matching source resolution may take longer and cost more than a 480p test.'
     return {'id': plan_id, 'fingerprint': fingerprint, 'kind': kind, 'cost': quote(kind)+detail,
             'graph': graph, 'checkpoint': c, 'character_count': count, 'generation': generation,
             'tracking_warnings': snapshot['tracking_warnings']}

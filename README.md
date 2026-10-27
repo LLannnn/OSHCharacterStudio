@@ -14,14 +14,11 @@ required for Cloud generation. **Cloud generation costs credits.**
 - Thumbnail timeline for trimming a 2–15 second replacement interval.
 - One or two characters, with up to six source keyframes and boxes per role.
 - Labelled source-image atlases for optional Gemini descriptions.
-- Independent EdgeTAM tracking sessions and source-description recovery after cuts.
+- Character tracking with recovery after cuts and temporary tracking loss.
 - A review timeline for tracking gaps, black transitions and recovered regions.
-- DWPose body motion control and expanded bounding-box redraw masks.
+- Motion guidance and adjustable redraw areas to help preserve the performance.
 - Editable descriptions and prompts; sample corrections retain existing prompts.
 - Original-resolution output or a 480p test mode, with source audio restored.
-
-The release always uses **V2 + bbox**. These two choices have no selectors.
-Resolution, mask expansion and Union strength remain editable.
 
 ## Examples
 
@@ -41,8 +38,7 @@ The animated divider shows source on the left and generated content on the right
 
 Download the repository and open `docs/examples/comparison.html` in a browser to
 use the draggable divider, synchronized playback and frame scrubbing. The viewer
-works offline. GitHub Markdown displays GIFs but does not run the slider's
-JavaScript; the HTML page must be opened locally or served by a static host.
+works offline. GitHub shows the GIF previews; open the HTML page locally for the slider.
 Example media are separate from the application's GPL license; see
 [third-party notices](THIRD_PARTY_NOTICES.md#example-media).
 
@@ -126,15 +122,15 @@ do not commit your actual `data/config.json` or key file.
 5. Generate descriptions in a separate Cloud job, or paste existing description
    JSON / a complete prompt. Review the prompt before continuing.
 6. In step 2, check source locator descriptions. They describe the **original**
-   characters, not the replacement references. Adjust mask expansion or Union
-   strength if needed, then prepare masks and DWPose locally.
+   characters, not the replacement references. Adjust mask expansion or guidance
+   strength if needed, then prepare tracking and motion previews locally.
 7. Inspect the mask and pose previews and tracking timeline. If a role is missed,
    return to step 1 and add samples or revise its locator description. Sample-only
    edits retain the prepared clip, replacement references and existing prompt;
    a notice recommends regenerating descriptions without requiring it.
 8. Resolve tracking review items, or explicitly accept the red tracking warning,
    then approve the current controls. Review the
-   H3 graph and cost disclosure, confirm and submit once.
+   inputs and cost disclosure, confirm and submit once.
 
 Prompt generation never automatically starts H3. Submissions are not retried
 when the network times out. If a job has a Cloud ID, resume polling that same job
@@ -154,29 +150,19 @@ unchanged or be replaced incorrectly. This does not start additional tasks for y
 Changing samples, descriptions or the warning issues requires a new acknowledgement.
 Missing/corrupted control files and local execution failures still need repair.
 
-## Processing settings
+## Output and guidance settings
 
-| Setting | Behavior |
+| Setting | What it changes |
 | --- | --- |
-| Pipeline | V2: MiniMax H3 ref2va + Fun ControlNet Union 2.0 INT8 |
-| Mask | Bounding box; expansion 0–64 tracking pixels, default 16 |
-| Union strength | 0.1–2.0, default 1.0 |
-| Resolution | Match source by default, or 480p test |
+| Output resolution | Match source video, or use 480p for a lower-cost test |
+| Mask expansion | Extra room around each tracked character; larger values can change more background |
+| Guidance strength | How strongly generation follows the redraw area and motion guidance |
 | Frame rate | 24 fps |
-| Duration | 2–15 seconds |
-| Sampling | Full 20 steps; seed 261662374822964 |
-| Descriptions | Gemini 3.1 Flash-Lite; optional when supplying existing text |
+| Clip duration | 2–15 seconds |
 
-Source-resolution mode keeps the input dimensions in the review output. H3's
-internal canvas is padded to multiples of 32; the exported review copy removes
-that padding, trims to the selected duration and restores source audio. Native
-resolution increases Cloud work; it is not just an upscale after 480p generation.
-Existing 480p preparations remain 480p until explicitly changed and prepared again.
-
-EdgeTAM uses a proxy at most 480 pixels high. Bounding-box expansion is measured
-on this proxy. DWPose reads original-resolution person regions. H3 receives the
-normal source video, merged mask and pose video: no grey-out preprocessing,
-SDPose or image-generation stage is used.
+The finished video covers the selected interval and includes source audio.
+Matching the source resolution preserves its dimensions and can cost more to generate
+than a 480p test. After changing resolution, prepare the inputs again.
 
 ## Data and costs
 
@@ -186,9 +172,8 @@ folder. Do not run two instances against the same data folder.
 
 Media preparation and tracking run on your computer. A confirmed description job
 uploads the selected clip, source atlases and replacement references to Comfy Cloud.
-A confirmed video job uploads the selected clip, replacement references, masks,
-poses, aligned video and prompt. Local worker processes have provider credentials
-removed from their environment.
+A confirmed video job uploads the selected clip, replacement references, tracking
+and motion guidance, and prompt.
 
 Cloud jobs incur provider and/or GPU runtime charges. The in-app disclosure uses
 a historical quote, not live pricing. Check your Comfy Cloud account for current
@@ -207,29 +192,20 @@ prices. Using the maintainer's conversion of **221 Comfy credits = US$1**:
 | 720p | 7 seconds | 230–350 credits | $1.04–$1.58 |
 | 1080p | Not tested | Not tested | Not estimated |
 
-Duration was checked against the saved 480p and 720p studio-performance jobs:
-both selected 6.084–13.084 seconds and exported **7.000-second review videos
-(168 frames at 24 fps)**. Their raw H3 outputs contain 175 frames (about 7.292
-seconds) before final trimming. Credit ranges above are supplied by the maintainer;
-the local job records do not independently verify the billed credits. The driving
-scene used in the walkthrough is a separate 5.529-second selection, not the
-7-second price example.
+Both resolutions were checked against saved jobs with 7.000-second final videos.
+The driving walkthrough uses a separate 5.529-second selection.
 
-USD is calculated as `credits / 221`, rounded to two decimal places. Actual totals
-vary with clip length, processing time and settings; these observations should not
-be extrapolated to every 2–15 second clip. They do not establish whether separate
-Gemini description charges were included. Local trimming and tracking do not submit
-Cloud jobs; description generation and H3 remain separate confirmed submissions.
+USD is calculated as `credits / 221`. Actual costs vary with clip length and
+settings. Budget separately for Gemini descriptions; these estimates do not confirm
+whether description charges were included.
 
 ## Limitations
 
 - Tracking recovery and shot detection are heuristics, not face recognition or a
   guarantee of identity. Small people, occlusions and cuts can remain unresolved.
-- Two-person bbox masks can overlap. H3 may mix identities, alter motion or leave
+- Overlapping characters may confuse identities, alter motion or leave
   halos/background artifacts even when tracking passes review.
 - Very short intervals are accepted, but may be less reliable than longer clips.
-- Comfy Cloud must provide the exact nodes and model names in the bundled graph;
-  changes to the service can require template updates.
 - macOS local inference has been tested. Windows launchers are included, but
   Windows model inference has not been validated in this project.
 - The server is intended for personal localhost use, not public hosting.
@@ -279,8 +255,5 @@ To create a source archive from a reviewed commit:
 git archive --format=zip --prefix=frame-character-studio/ --output=../frame-character-studio-source.zip HEAD
 ```
 
-This includes committed source and the selected documentation examples, with no
-`.git` history, ignored local data, credentials or cached weights. For an existing private development repository,
-start the public repository from the reviewed source package rather than pushing
-old branches/history. Inspect the archive before publishing. No remote repository
-or publication is configured by the app.
+The archive contains committed source and documentation examples. Local projects,
+credentials and downloaded models are excluded.

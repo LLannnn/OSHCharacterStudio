@@ -195,7 +195,7 @@ class ControlsTests(unittest.TestCase):
         plan=app.make_plan(self.pid,'video','prompt')
         self.assertEqual(plan['graph']['236']['inputs']['width'],1920)
         self.assertEqual(plan['graph']['236']['inputs']['height'],1088)
-        self.assertIn('larger canvas',plan['cost'])
+        self.assertIn('cost more than a 480p test',plan['cost'])
         app.generation_settings(self.pid,dict(grow_px=10,strength=.8))
         self.assertFalse(app.control_state(self.pid)['valid'])
         with self.assertRaises(ValueError):app.make_plan(self.pid,'video','prompt')

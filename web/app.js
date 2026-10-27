@@ -93,7 +93,7 @@ function markDirty(kind='inputs') {
 function renderSampleNotice(){
   const notice=$('sampleChangeNotice');
   notice.hidden=!sampleDirty&&!current?.sample_facts_stale;
-  notice.textContent=sampleDirty?'Character samples changed. The existing prompt is retained. Local tracking will update the sample atlases automatically; regenerating descriptions is recommended, not required.':'Character samples changed since the saved descriptions. The existing prompt can still be used; regenerating descriptions is recommended.';
+  notice.textContent=sampleDirty?'Character samples changed. The existing prompt is retained. Consider regenerating descriptions for the new views before continuing.':'Character samples changed since the saved descriptions. The existing prompt can still be used; regenerating descriptions is recommended.';
   $('prepareInputs').textContent=sampleDirty?'Update character samples locally':'Prepare and review inputs';
 }
 async function updateSampleInputs(){
@@ -118,8 +118,8 @@ function renderMode(){
   $('characterModeHint').textContent=single?'Replace character A and keep other people unchanged.':'Replace both characters using A → A and B → B.';
   $('mappingTag').textContent=single?'A → A':'A → A · B → B';
   $('mappingHint').textContent=single?'Upload one replacement reference for A.':'Your A/B pairing determines each replacement.';
-  $('inputCheckpointHint').textContent='Prepare the clip and '+(single?'two':'four')+' input images locally, then review what will be sent.';
-  $('videoGenerationHint').textContent='Use the selected resolution and control settings with the clip, '+(single?'one':'two')+' replacement reference(s), reviewed prompt, masks and DWPose controls.';
+  $('inputCheckpointHint').textContent='Prepare the selected clip and character images, then review what will be sent.';
+  $('videoGenerationHint').textContent='Review the clip, replacement references and prompt before generating.';
   $('timelineHelp').textContent='Click or drag thumbnails to preview. Drag the edges to trim or the green center to move the range. Drag '+(single?'A':'A / B')+' markers to change keyframes.';
   $('factsText').placeholder='Paste Gemini base descriptions and per-sample arrays.';
   timelineView.update(selections,active,roleCount());
@@ -266,8 +266,8 @@ function drawFrame() {
     ctx.strokeStyle=active==='A'?'#b6e6b4':'#a9c7ed';ctx.lineWidth=Math.max(2,canvas.width/500);ctx.strokeRect(r.x,r.y,r.width,r.height);
     for(const [x,y]of[[r.x,r.y],[r.x+r.width,r.y],[r.x,r.y+r.height],[r.x+r.width,r.y+r.height]]){ctx.fillStyle=ctx.strokeStyle;const d=Math.max(5,canvas.width/150);ctx.fillRect(x-d/2,y-d/2,d,d);}
     for(const[k,id]of[['x','cropX'],['y','cropY'],['width','cropW'],['height','cropH']])$(id).value=r[k];
-    $('cropInfo').textContent=`Character ${active} · ${selections[active].time.toFixed(3)}s · Source image ${canvas.width} × ${canvas.height} · Box ${r.x}, ${r.y}, ${r.width}, ${r.height}`;
-  }else {$('cropInfo').textContent=`Character ${active} · ${selections[active].time.toFixed(3)}s · Source image ${canvas.width} × ${canvas.height} · Draw a new box`;for(const id of ['cropX','cropY','cropW','cropH'])$(id).value='';}
+    $('cropInfo').textContent=`Character ${active} · ${selections[active].time.toFixed(3)}s · Box selected`;
+  }else {$('cropInfo').textContent=`Character ${active} · ${selections[active].time.toFixed(3)}s · Draw a character box`;for(const id of ['cropX','cropY','cropW','cropH'])$(id).value='';}
 }
 function point(event){const c=$('cropCanvas'),r=c.getBoundingClientRect();return {x:Math.round(Math.max(0,Math.min(c.width,(event.clientX-r.left)*c.width/r.width))),y:Math.round(Math.max(0,Math.min(c.height,(event.clientY-r.top)*c.height/r.height)))};}
 $('cropCanvas').addEventListener('pointerdown',event=>{drag=point(event);$('cropCanvas').setPointerCapture(event.pointerId);});
@@ -290,7 +290,7 @@ function setStep(n){
 function renderVideoSummary(){
   const box=$('videoSummary');box.replaceChildren();
   if(dirty||!current.prepared){const p=document.createElement('p');p.textContent='Return to step 1 and prepare the clip and character inputs.';box.append(p);return;}
-  const first=document.createElement('div'),v=document.createElement('video'),p=document.createElement('p');v.controls=true;v.src=fileUrl(current.prepared.files.clip);const info=current.prepared.info,o=info.output||info;p.textContent=`${current.prepared.start.toFixed(3)}–${current.prepared.end.toFixed(3)}s · Output ${o.width}×${o.height} · 24fps · H3 canvas ${info.width}×${info.height}`;first.append(v,p);box.append(first);
+  const first=document.createElement('div'),v=document.createElement('video'),p=document.createElement('p');v.controls=true;v.src=fileUrl(current.prepared.files.clip);const info=current.prepared.info,o=info.output||info;p.textContent=`${current.prepared.start.toFixed(3)}–${current.prepared.end.toFixed(3)}s · Output ${o.width}×${o.height} · 24 fps`;first.append(v,p);box.append(first);
   for(const label of activeRoles()){const d=document.createElement('div'),i=document.createElement('img'),t=document.createElement('p');i.src=fileUrl(current.prepared.files['target_'+label]);i.alt='Replacement reference '+label;t.textContent='Reference '+label+' → Source '+label;d.append(i,t);box.append(d);}
 }
 async function openPlan(kind){
@@ -303,7 +303,7 @@ async function openPlan(kind){
   $('costText').textContent=pendingPlan.cost;
   $('confirmTitle').textContent=kind==='prompt'?'Generate descriptions only':'Generate replacement video only';
   const count=pendingPlan.character_count;
-  $('confirmInputs').textContent=(count===1?'One character: ':'Two characters: ')+(kind==='prompt'?`1 clip + ${count*2} ordered character images. Generates descriptions only.`:`1 clip + ${count} reference images + reviewed prompt, masks and DWPose controls. Union 2.0 video generation only.`);
+  $('confirmInputs').textContent=(count===1?'One character: ':'Two characters: ')+(kind==='prompt'?`1 clip + ${count*2} ordered character images. Generates descriptions only.`:`1 clip + ${count} reference images + reviewed prompt, tracking and motion guidance.`);
   $('confirmTrackingWarning').hidden=!pendingPlan.tracking_warnings?.length;
   $('confirmTrackingWarning').textContent=pendingPlan.tracking_warnings?.length?`You accepted ${pendingPlan.tracking_warnings.length} unresolved tracking warning(s). Missing frames may remain unchanged or be replaced incorrectly. Add samples and retry, or split into shorter replacement tasks if needed. This submission uses the available controls.`:'';
   $('graphPreview').textContent=JSON.stringify(pendingPlan.graph,null,2);
@@ -375,7 +375,7 @@ async function refreshControls(){
   if(ready){
     for(const [id,role] of [['maskPreview','mask'],['posePreview','pose']]){const url=fileUrl(r.previews[role]);if($(id).getAttribute('src')!==url)$(id).src=url;}
     $('controlPresence').textContent=Object.entries(r.manifest.presence).map(([label,p])=>`${label}: tracked ${p.nonempty_frames} frames${p.nonempty_frames?`, clip ${p.first_seconds.toFixed(2)}–${p.last_seconds.toFixed(2)}s`:''}; valid pose ${r.manifest.pose_nonempty_frames[label]} frames`).join('; ')+`. Automatic source locations: ${r.quality?.auto_anchors?.length||0}. Undetected frames have empty masks. Check crossings, entrances, exits and small people.`;
-    const box=$('controlDownloads');box.replaceChildren();for(const [role,name] of [['control_mask','Mask video (white = redraw)'],['control_pose','DWPose control video']]){const a=document.createElement('a');a.href=fileUrl(r.files[role]);a.download='';a.textContent=name;box.append(a);}
+    const box=$('controlDownloads');box.replaceChildren();for(const [role,name] of [['control_mask','Mask video (white = redraw)'],['control_pose','Motion guidance video']]){const a=document.createElement('a');a.href=fileUrl(r.files[role]);a.download='';a.textContent=name;box.append(a);}
   }
   if(ready||needsInput){
     const video=needsInput?$('trackingReviewVideo'):$('maskPreview');
@@ -431,7 +431,7 @@ async function refreshJobs(){
   for(const id of [...current.jobs].reverse()){
     const j=await api(`/api/job/${pid}/${id}`,undefined,'GET');if(current.id!==pid)return;
     const row=document.createElement('div');row.className='job';
-    const d=document.createElement('div'),title=document.createElement('div'),small=document.createElement('small');title.className='job-title';title.textContent=(j.kind==='prompt'?'01 · Gemini descriptions':'02 · H3 video · '+(j.generation_version||'v2').toUpperCase())+' · '+new Date(j.created*1000).toLocaleString('en-US');small.textContent=j.prompt_id?'Cloud job: '+j.prompt_id:'Upload / submission record (no Cloud ID yet): '+j.id;d.append(title,small);
+    const d=document.createElement('div'),title=document.createElement('div'),small=document.createElement('small');title.className='job-title';title.textContent=(j.kind==='prompt'?'01 · Gemini descriptions':'02 · Video generation')+' · '+new Date(j.created*1000).toLocaleString('en-US');small.textContent=j.prompt_id?'Cloud job: '+j.prompt_id:'Upload / submission record (no Cloud ID yet): '+j.id;const details=document.createElement('details'),summary=document.createElement('summary');summary.textContent='Job details';details.append(summary,small);d.append(title,details);
     if(j.error){const error=document.createElement('p');error.className='job-error';error.textContent=j.error;d.append(error);}
     const controls=document.createElement('div'),s=document.createElement('span');s.className='status';s.textContent=statusNames[j.status]||j.status;controls.append(s);
     if(j.prompt_id){const link=document.createElement('a');link.textContent=' Cloud ';link.href='https://cloud.comfy.org/';link.target='_blank';link.rel='noreferrer';controls.append(link);}
