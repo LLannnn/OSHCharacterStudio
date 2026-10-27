@@ -1,0 +1,40 @@
+# Local projects, credentials, uploads and generated outputs
+/data/
+/verification/
+/uploads/
+/outputs/
+/logs/
+/config.json
+.env
+.env.*
+!.env.example
+*.key
+*.pem
+*.p12
+*.pfx
+*.log
+
+# Python environments and caches
+.venv/
+venv/
+__pycache__/
+.pytest_cache/
+*.py[cod]
+.coverage
+htmlcov/
+
+# OS metadata
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# Local model files and runtime dependencies
+/models/
+/bin/
+
+# Distribution archives and editor state
+/dist/
+*.zip
+*.tar.gz
+.idea/
+.vscode/

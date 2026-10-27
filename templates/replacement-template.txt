@@ -1,0 +1,7 @@
+In <Video 1>, replace the two selected source characters with two distinct reference characters.
+Replace {{SOURCE_A}} with the character in <Picture 1>. Use <Picture 1> for facial identity and reference appearance: {{TARGET_A}}. Remove the original character's {{REMOVE_A}} and adapt the visible reference outfit to the source pose.
+Replace {{SOURCE_B}} with the character in <Picture 2>. Use <Picture 2> for facial identity and reference appearance: {{TARGET_B}}. Remove the original character's {{REMOVE_B}} and adapt the visible reference outfit to the source pose.
+The <Picture 1> character takes over the first source character's {{ACTIONS_A}}. The <Picture 2> character takes over the second source character's {{ACTIONS_B}}. Preserve their source interaction: {{INTERACTION}}.
+Keep these identity assignments throughout movement, changes of screen position, occlusions and cuts. Never exchange, blend, duplicate or merge their identities or clothing. Follow the original characters' positions over time; keyframe positions are selection cues only.
+Preserve <Video 1> shot by shot: {{SHOT_STRUCTURE}}. Retain its camera, framing, timing, head angles, expressions, mouth openings, lip movements, gestures and occlusions. Keep the source scene and objects: {{SCENE}}. Preserve lighting and prop contacts.
+Reference images supply appearance only. Do not copy their backgrounds, smiles or portrait poses, or insert reference-image opening/ending shots. Do not invent unseen clothes or body parts. Add no people, text or split-screen. Preserve the source soundtrack.

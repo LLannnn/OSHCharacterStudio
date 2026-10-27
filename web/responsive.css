@@ -1,0 +1,20 @@
+/* Keep native file controls hidden even inside styled labels. */
+input[type="file"] { display: none !important; }
+.reference-upload img { min-width: 0; flex: 1; }
+.character-mode-row{display:flex;align-items:center;justify-content:space-between;gap:15px;margin:0 0 22px;padding:16px 20px;border:1px solid var(--line);border-radius:9px;background:#17201a}
+.character-mode-row b{font-size:13px;font-weight:500}.character-mode-row p{font-size:11px;margin:5px 0 0}.character-mode-row .tabs{flex-shrink:0}.single-character .character-card{display:block;width:100%}.single-character .checkpoint-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.single-character .generation-summary{grid-template-columns:1.6fr 1fr}
+@media(max-width:600px){.character-mode-row{align-items:start;flex-direction:column}.character-mode-row .tabs{align-self:stretch}.character-mode-row .tabs button{flex:1}.single-character .generation-summary{grid-template-columns:1fr}.single-character .generation-summary>div:first-child{grid-column:auto}}
+@media (max-width: 420px) {
+  .character-card { display: block; width: 100%; }
+  .character-card:last-child { margin-left: 0; }
+  .crop-numbers button { width: 100%; }
+  .steps > button { padding-right: 10px; }
+  .steps small { display: none; }
+  .steps b { margin-right: 7px; font-size: 15px; }
+  .steps span { font-size: 11px; }
+}
+/* Resolution is an editable input and must remain visible on narrow windows. */
+.range-row{flex-wrap:wrap}
+.range-row .range-note{display:block}
+.range-note select{display:block;max-width:100%;margin-top:6px}
+@media(max-width:600px){.range-row .range-note{width:100%;margin-left:0}}
