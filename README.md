@@ -1,5 +1,8 @@
 # Frame / Character Studio
 
+[Source](https://github.com/LLannnn/OSHCharacterStudio) ·
+[Report an issue](https://github.com/LLannnn/OSHCharacterStudio/issues)
+
 Replace one or two characters in a video while keeping the source performance.
 A local browser interface handles trimming, character samples, tracking review and
 prompt editing. Gemini descriptions and MiniMax H3 video generation are separate,
