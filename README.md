@@ -70,18 +70,43 @@ to someone else, add samples in that range and retry before approving the previe
 
 [Watch all three GIFs or download the MP4 recordings](docs/demos/README.md).
 
+## Prerequisites
+
+| Where | What you need |
+| --- | --- |
+| Your computer | macOS or Windows, [Python](https://www.python.org/downloads/) 3.11 or 3.12 with pip, [Git](https://git-scm.com/downloads), and a modern browser |
+| Video processing | [FFmpeg and FFprobe](https://ffmpeg.org/download.html), both available on your PATH |
+| Local tracking | PyTorch/Torchvision, Transformers with EdgeTAM support, NumPy, Pillow, OpenCV and the DWPose preprocessor dependencies |
+| Local model files | Cached EdgeTAM and Grounding DINO weights, plus the DWPose ONNX file; [download and setup instructions](docs/model-setup.md#2-download-local-models) |
+| Comfy Cloud | An account with generation credits and an [API key](https://platform.comfy.org/profile/api-keys) |
+| Cloud video models | MiniMax H3 and Union 2.0 weights available in that same account; [required files and import steps](docs/model-setup.md#comfy-cloud-prerequisites) |
+
+**Import missing MiniMax models into Comfy Cloud before generating a video.**
+In particular, this release requires
+`minimax_h3_fun_controlnet_union_2.0_pruned_int8_convrot.safetensors` in
+`model_patches`. The app does not import weights or install missing Cloud nodes
+for you. Model importing currently requires Creator or higher; see the
+[official import requirements](https://docs.comfy.org/cloud/import-models).
+
+Local ComfyUI and local MiniMax weights are not required. Tracking and skeleton
+preparation run on your computer; video generation runs in Comfy Cloud. Apple
+Silicon or a supported CUDA GPU is recommended for local tracking; CPU can be slow.
+Allow disk space for the Python environment, local models and project media.
+
 ## Quick start
 
-Requirements:
+Install the prerequisites above. Then clone this repository, or download its ZIP
+and open a terminal in the extracted folder:
 
-- Python 3.11 or 3.12 for the app.
-- [FFmpeg and FFprobe](https://ffmpeg.org/download.html) on your PATH.
-- A separate local model environment, described in [Model setup](docs/model-setup.md).
-- A modern browser. Node.js is only needed for contributor tests.
-
-Download the source package and open a terminal in the extracted project folder.
+```sh
+git clone https://github.com/LLannnn/OSHCharacterStudio.git
+cd OSHCharacterStudio
+```
 
 ### macOS
+
+Check that `python3 --version` is 3.11 or 3.12. Use `python3.11` or `python3.12`
+explicitly if another Python is the default on your PATH.
 
 ```sh
 python3 -m venv .venv
@@ -111,16 +136,21 @@ the port shown in its terminal.
 
 ## Configure once
 
-Open **Settings**:
+Complete [Model setup](docs/model-setup.md) for the local models and Cloud imports,
+then open **Settings**:
 
-1. Set **Comfy key file path** to a file containing your API key. A plain key,
+1. Create a key in [Comfy API keys](https://platform.comfy.org/profile/api-keys)
+   using the same account as your Cloud model imports. Save it in a local text
+   file, then set **Comfy key file path** to that file. A plain key,
    JSON object (`COMFY_API_KEY`, `COMFY_CLOUD_API_KEY` or `api_key`), or environment
    assignment is accepted. Keep this file outside your public source tree.
 2. Expand **Local model runtime** and set the model Python, the
    `comfyui_controlnet_aux` checkout and the `dw-ll_ucoco_384.onnx` model path.
    Extra site-packages is optional for an existing custom environment.
-3. Save settings. Follow [Model setup](docs/model-setup.md) to prepare dependencies
-   and cache weights before attempting tracking.
+3. Save settings. Check that FFmpeg/FFprobe and the local model paths are ready.
+   Run the [setup checks](docs/model-setup.md#4-check-the-installation) before your
+   first tracking attempt. Installing only `requirements.txt` is not enough for
+   tracking or Cloud model availability.
 
 Alternatively, the server reads `COMFY_API_KEY` or `COMFY_CLOUD_API_KEY` from its
 environment. Only a key file path is saved in app configuration; key contents are

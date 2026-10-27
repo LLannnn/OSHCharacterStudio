@@ -18,6 +18,14 @@ strength" for the Union strength setting. Preserve editable settings, output
 resolution, tracking warnings, upload disclosure and paid confirmation. Keep
 technical details in this guide, model setup, or collapsed advanced sections;
 tracking statistics, box coordinates and job IDs should be available on demand.
+Required installation steps are user-facing details: keep a complete prerequisites
+checklist in README and a fresh-install guide for local dependencies, all three
+local model downloads, Comfy API-key setup and Cloud model imports. Check the
+required Cloud weight list against the actual reachable video graph, including
+its LoRA entry, rather than inferring requirements from the sampling step count.
+Document the exact Union 2.0 file, `model_patches` folder and Cloud loader identifier;
+separate missing weights from missing nodes. Do not imply the app imports weights
+or installs Cloud nodes, or that local MiniMax files satisfy Cloud requirements.
 
 Prompt generation and H3 are independent stages. No automatic chaining, paid
 retries or model substitutions. New paid tests require explicit approval covering
@@ -106,7 +114,7 @@ Run the commands in [README.md](README.md#development) with `requirements-dev.tx
 No weights, API key or paid calls should be needed. For a state, geometry or graph
 change, include a focused regression covering its behavior and stale-state gates.
 Changing a template requires checking its reachable output graph, reference order,
-node links and both H3 model consumers. Preserve the full 20-step non-turbo model
+node links and both H3 model consumers. Preserve the full 20-step model
 chain and Union 2.0 INT8 unless a model change is explicitly requested.
 
 When testing the interface, use an isolated `V2V_DATA_DIR` and a different port.
